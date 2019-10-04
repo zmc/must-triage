@@ -1,4 +1,4 @@
-from . import ocp
+from . import ocp, ocs
 
 
 def merge_interests(existing, new):
@@ -14,4 +14,4 @@ def merge_interests(existing, new):
 
 
 def all():
-    return [ocp.OCP]
+    return [ocp.OCP, ocs.OCS]
