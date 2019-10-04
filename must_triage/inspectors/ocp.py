@@ -24,8 +24,15 @@ class OCP:
                 except (yaml.scanner.ScannerError, yaml.parser.ParserError):
                     interests[path].append("Failed to parse YAML content")
                     continue
+            pods = list()
             if obj['kind'].lower() == 'pod':
-                interests[path].extend(self.pod_ready(obj))
+                pods.append(obj)
+            elif obj['kind'].lower() == 'podlist':
+                pods.extend(filter(
+                    lambda o: o['kind'].lower() == 'pod',
+                    obj['items']
+                ))
+            interests[path].extend(map(self.pod_ready, pods))
         return interests
 
     def pod_ready(self, obj):
