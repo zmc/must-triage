@@ -38,10 +38,13 @@ class OCP:
     def pod_ready(self, obj):
         result = list()
         cstatuses = obj['status']['containerStatuses']
-        readies = list(map(lambda s: s['ready'], cstatuses))
-        for i in range(len(readies)):
-            if readies[i] is not True:
-                result.append(
-                    f"Container '{cstatuses[i]['name']}' in "
-                    f"pod '{obj['metadata']['name']}' is not ready")
+        not_ready = filter(lambda cs: cs['ready'] is False, cstatuses)
+        for cs in not_ready:
+            ts = cs['state'].get('terminated', dict())
+            if (ts.get('reason', '').lower() == 'completed' and
+                    ts.get('exitCode') == 0):
+                continue
+            result.append(
+                f"Container '{cs['name']}' in "
+                f"pod '{obj['metadata']['name']}' is not ready")
         return result
