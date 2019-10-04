@@ -1,4 +1,5 @@
 import json
+import os
 import re
 
 import must_triage.fs as fs
@@ -22,6 +23,9 @@ class OCS:
         interests = dict()
         for path in paths:
             interests[path] = list()
+            if os.stat(path).st_size == 0:
+                interests[path].append("File is empty")
+                continue
             with open(path) as fd:
                 try:
                     obj = json.load(fd)
