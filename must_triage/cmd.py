@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 
+from must_triage import formatters
 from must_triage import inspectors
 
 
@@ -25,4 +26,4 @@ def main():
         inspector = inspector_cls(root=args.path)
         inspectors.merge_interests(interests, inspector.inspect())
 
-    print(json.dumps(interests, indent=2))
+    print(json.dumps(interests, indent=2, default=formatters.json_serialize))
