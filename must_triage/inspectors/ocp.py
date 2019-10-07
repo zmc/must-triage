@@ -37,8 +37,15 @@ class OCP:
 
     def pod_ready(self, obj):
         result = list()
-        cstatuses = obj['status']['containerStatuses']
-        not_ready = filter(lambda cs: cs['ready'] is False, cstatuses)
+        status = obj['status']
+        try:
+            container_statuses = status['containerStatuses']
+        except KeyError:
+            return [dict(
+                pod_name=obj['metadata']['name'],
+                status=status,
+                )]
+        not_ready = filter(lambda cs: cs['ready'] is False, container_statuses)
         for cs in not_ready:
             ts = cs['state'].get('terminated', dict())
             if (ts.get('reason', '').lower() == 'completed' and
