@@ -3,11 +3,10 @@ import yaml
 import must_triage.fs as fs
 import must_triage.inspectors as inspectors
 
+from must_triage.inspectors.base import Inspector
 
-class OCP:
-    def __init__(self, root):
-        self.root = root
 
+class OCP(Inspector):
     def inspect(self):
         self.interests = dict()
         yamls = fs.find(self.root, lambda p: fs.has_ext(p, ['.yaml', '.yml']))
@@ -15,8 +14,10 @@ class OCP:
         return self.interests
 
     def inspect_yamls(self, paths):
+        if not paths:
+            return dict()
         interests = dict()
-        for path in paths:
+        for path in self._progress_class("Reading OCP files").iter(paths):
             interests[path] = list()
             with open(path) as fd:
                 try:

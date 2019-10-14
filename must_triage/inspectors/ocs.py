@@ -5,11 +5,10 @@ import re
 import must_triage.fs as fs
 import must_triage.inspectors as inspectors
 
+from must_triage.inspectors.base import Inspector
 
-class OCS:
-    def __init__(self, root):
-        self.root = root
 
+class OCS(Inspector):
     def inspect(self):
         self.interests = dict()
         jsons = fs.find(
@@ -20,8 +19,10 @@ class OCS:
         return self.interests
 
     def inspect_jsons(self, paths):
+        if not paths:
+            return dict()
         interests = dict()
-        for path in paths:
+        for path in self._progress_class("Reading OCS files").iter(paths):
             interests[path] = list()
             if os.stat(path).st_size == 0:
                 interests[path].append("File is empty")
