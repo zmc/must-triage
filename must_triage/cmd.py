@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import json
 import os
 import yaml
@@ -32,7 +33,7 @@ def main():
         if not args.quiet:
             inspector_args['progress_class'] = ProgressBar
         inspector = inspector_cls(**inspector_args)
-        inspectors.merge_interests(interests, inspector.inspect())
+        inspectors.merge_interests(interests, asyncio.run(inspector.inspect()))
 
     if args.out == 'json':
         print(json.dumps(

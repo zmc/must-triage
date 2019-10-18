@@ -6,5 +6,5 @@ class Inspector:
         self.root = root
         self._progress_class = progress_class
 
-    def inspect(self):
+    async def inspect(self):
         raise NotImplementedError
