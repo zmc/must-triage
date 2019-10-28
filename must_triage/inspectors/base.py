@@ -1,10 +1,7 @@
-from must_triage.progress import NoProgress
-
-
 class Inspector:
-    def __init__(self, root, progress_class=NoProgress):
+    def __init__(self, root, progress=False):
         self.root = root
-        self._progress_class = progress_class
+        self.progress = progress
 
     async def inspect(self):
         raise NotImplementedError

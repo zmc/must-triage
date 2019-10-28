@@ -6,7 +6,6 @@ import yaml
 
 from must_triage import formatters
 from must_triage import inspectors
-from must_triage.progress import ProgressBar
 
 
 def parse_args():
@@ -29,10 +28,7 @@ def main():
     args = parse_args()
     interests = dict()
     for inspector_cls in inspectors.all():
-        inspector_args = dict(root=args.path)
-        if not args.quiet:
-            inspector_args['progress_class'] = ProgressBar
-        inspector = inspector_cls(**inspector_args)
+        inspector = inspector_cls(root=args.path, progress=not args.quiet)
         inspectors.merge_interests(interests, asyncio.run(inspector.inspect()))
 
     if args.out == 'json':

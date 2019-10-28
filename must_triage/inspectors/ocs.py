@@ -6,6 +6,7 @@ import must_triage.fs as fs
 import must_triage.inspectors as inspectors
 
 from must_triage.inspectors.base import Inspector
+from must_triage.progress import ProgressBar
 
 
 class OCS(Inspector):
@@ -25,7 +26,8 @@ class OCS(Inspector):
         if not paths:
             return dict()
         interests = dict()
-        for path in self._progress_class("Reading OCS files").iter(paths):
+        for path in ProgressBar(
+                paths, desc="Reading OCS files", disable=not self.progress):
             interests[path] = await self._inspect_json(path)
         return interests
 
