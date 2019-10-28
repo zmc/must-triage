@@ -1,12 +1,13 @@
 import yaml
 
-import asyncio
 from concurrent.futures import ProcessPoolExecutor
+from tqdm import tqdm
 
 import must_triage.fs as fs
 import must_triage.inspectors as inspectors
 
 from must_triage.inspectors.base import Inspector
+from must_triage.progress import ProgressBar
 
 
 class OCP(Inspector):
@@ -26,30 +27,24 @@ class OCP(Inspector):
         if not paths:
             return dict()
         interests = dict()
-        #bar = self._progress_class("Reading OCP files", max=len(paths))
-        bar = None
-        loop = asyncio.get_running_loop()
-        futures = [
-            loop.run_in_executor(self.executor, OCP._inspect_yaml, path, bar)
-            for path in paths
-        ]
-        results = await asyncio.gather(*futures, return_exceptions=False)
+        results = list(ProgressBar(
+            self.executor.map(OCP._inspect_yaml, paths),
+            total=len(paths),
+            desc="Reading OCP files",
+            disable=not self.progress,
+        ))
         for result in results:
             interests.update(result)
-        if bar:
-            bar.finish()
         return interests
 
     @staticmethod
-    def _inspect_yaml(path, bar=None):
+    def _inspect_yaml(path):
         result = {path: list()}
         with open(path) as fd:
             try:
                 obj = yaml.safe_load(fd)
             except (yaml.scanner.ScannerError, yaml.parser.ParserError):
                 result[path].append("Failed to parse YAML content")
-                if bar:
-                    bar.next()
                 return result
         pods = list()
         if obj['kind'].lower() == 'pod':
@@ -60,9 +55,6 @@ class OCP(Inspector):
                 obj['items']
             ))
         result[path].extend(map(OCP.pod_ready, pods))
-        # print(result)
-        if bar:
-            bar.next()
         return result
 
     @staticmethod
