@@ -12,7 +12,7 @@ from must_triage.progress import ProgressBar
 class OCP(Inspector):
     async def inspect(self):
         self.interests = dict()
-        yamls = fs.find(self.root, lambda p: fs.has_ext(p, ['.yaml', '.yml']))
+        yamls = fs.find(self.root, lambda p: fs.has_ext(p, ['yaml', 'yml']))
         with ProcessPoolExecutor() as executor:
             self.executor = executor
             interests = await self.inspect_yamls(yamls)
