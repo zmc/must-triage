@@ -18,12 +18,21 @@ class OCS(Inspector):
             self.root,
             lambda p: re.match('.*--format_json(-pretty)?$', p)
         )
+        logs = fs.find(
+            self.root,
+            lambda p: fs.has_ext(p, ['log'])
+        )
         with ProcessPoolExecutor() as executor:
             self.executor = executor
-            interests = await self.inspect_jsons(jsons)
+            json_interests = await self.inspect_jsons(jsons)
+            log_interests = await self.inspect_logs(logs)
         inspectors.merge_interests(
             self.interests,
-            interests
+            json_interests
+        )
+        inspectors.merge_interests(
+            self.interests,
+            log_interests
         )
         return self.interests
 
@@ -63,3 +72,33 @@ class OCS(Inspector):
         if obj['status'] != 'HEALTH_OK':
             result.append(obj)
         return result
+
+    async def inspect_logs(self, paths):
+        if not paths:
+            return dict()
+        interests = dict()
+        results = list(ProgressBar(
+            self.executor.map(OCS._inspect_log, paths),
+            total=len(paths),
+            desc="Reading log files",
+            disable=not self.progress,
+        ))
+        for result in results:
+            interests.update(result)
+        return interests
+
+    @staticmethod
+    def _inspect_log(path):
+        result = {path: list()}
+        with open(path) as log:
+            for line in log.readlines():
+                line = line.strip()
+                if OCS.panicked(line):
+                    result[path].append(line)
+        return result
+
+    @staticmethod
+    def panicked(line):
+        if re.match('.*Observed a panic:.*', line):
+            return True
+        return False
