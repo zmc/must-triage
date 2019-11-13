@@ -2,6 +2,8 @@ import json
 import os
 import re
 
+from concurrent.futures import ProcessPoolExecutor
+
 import must_triage.fs as fs
 import must_triage.inspectors as inspectors
 
@@ -16,9 +18,12 @@ class OCS(Inspector):
             self.root,
             lambda p: re.match('.*--format_json(-pretty)?$', p)
         )
+        with ProcessPoolExecutor() as executor:
+            self.executor = executor
+            interests = await self.inspect_jsons(jsons)
         inspectors.merge_interests(
             self.interests,
-            await self.inspect_jsons(jsons),
+            interests
         )
         return self.interests
 
@@ -26,27 +31,34 @@ class OCS(Inspector):
         if not paths:
             return dict()
         interests = dict()
-        for path in ProgressBar(
-                paths, desc="Reading OCS files", disable=not self.progress):
-            interests[path] = await self._inspect_json(path)
+        results = list(ProgressBar(
+            self.executor.map(self._inspect_json, paths),
+            total=len(paths),
+            desc="Reading OCS files",
+            disable=not self.progress,
+        ))
+        for result in results:
+            interests.update(result)
         return interests
 
-    async def _inspect_json(self, path):
-        result = list()
+    @staticmethod
+    def _inspect_json(path):
+        result = {path: list()}
         if os.stat(path).st_size == 0:
-            result.append("File is empty")
+            result[path].append("File is empty")
             return result
         with open(path) as fd:
             try:
                 obj = json.load(fd)
             except json.decoder.JSONDecodeError:
-                result.append("Failed to parse JSON content")
+                result[path].append("Failed to parse JSON content")
                 return result
         if 'health_detail' in path:
-            result.extend(self.unhealthy(obj))
+            result[path].extend(OCS.unhealthy(obj))
         return result
 
-    def unhealthy(self, obj):
+    @staticmethod
+    def unhealthy(obj):
         result = list()
         if obj['status'] != 'HEALTH_OK':
             result.append(obj)
