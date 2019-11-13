@@ -1,7 +1,6 @@
 import yaml
 
 from concurrent.futures import ProcessPoolExecutor
-from tqdm import tqdm
 
 import must_triage.fs as fs
 import must_triage.inspectors as inspectors
