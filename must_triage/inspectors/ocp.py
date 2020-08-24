@@ -78,3 +78,24 @@ class OCP(Inspector):
                 f"Container '{cs['name']}' in "
                 f"pod '{obj['metadata']['name']}' is not ready")
         return result
+    @staticmethod
+    def restart_count(obj):
+        result = list()
+        status = obj['status']
+        try:
+            container_statuses = status['containerStatuses']
+        except KeyError:
+            return [dict(
+                pod_name=obj['metadata']['name'],
+                status=status,
+                )]
+        not_ready = filter(lambda cs: cs['restartCount'] != '0', container_statuses)
+        for cs in not_ready:
+            ts = cs['state'].get('terminated', dict())
+            if (ts.get('restartCount', '').lower() == 'completed' and
+                    ts.get('exitCode') == 0):
+                continue
+            result.append(
+                f"Container '{cs['name']}' in "
+                f"pod '{obj['metadata']['name']}' has a restart count")
+        return result
