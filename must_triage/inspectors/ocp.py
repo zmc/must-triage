@@ -1,43 +1,20 @@
 import yaml
 
-from concurrent.futures import ProcessPoolExecutor
-
 import must_triage.fs as fs
-import must_triage.inspectors as inspectors
 
 from must_triage.inspectors.base import Inspector
-from must_triage.progress import ProgressBar
 
 
 class OCP(Inspector):
-    async def inspect(self):
-        self.interests = dict()
-        yamls = fs.find(self.root, lambda p: fs.has_ext(p, ['yaml', 'yml']))
-        with ProcessPoolExecutor() as executor:
-            self.executor = executor
-            interests = await self.inspect_yamls(yamls)
-        inspectors.merge_interests(
-                self.interests,
-                interests,
-        )
-        return self.interests
-
-    async def inspect_yamls(self, paths):
-        if not paths:
-            return dict()
-        interests = dict()
-        results = list(ProgressBar(
-            self.executor.map(OCP._inspect_yaml, paths),
-            total=len(paths),
-            desc="Reading OCP files",
-            disable=not self.progress,
-        ))
-        for result in results:
-            interests.update(result)
-        return interests
+    gather_types = dict(
+        yaml=dict(
+            match=lambda p: fs.has_ext(p, ['yaml', 'yml']),
+            description="Reading OCP YAML files",
+        ),
+    )
 
     @staticmethod
-    def _inspect_yaml(path):
+    def inspect_yaml(path):
         result = {path: list()}
         with open(path) as fd:
             try:
