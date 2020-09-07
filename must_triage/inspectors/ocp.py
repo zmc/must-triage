@@ -54,7 +54,7 @@ class OCP(Inspector):
                 lambda o: o['kind'].lower() == 'pod',
                 obj['items']
             ))
-        result[path].extend(map(OCP.pod_ready, pods))
+        result[path].extend(map(OCP.pod_ready, OCP.restart_count, pods))
         return result
 
     @staticmethod
@@ -78,6 +78,7 @@ class OCP(Inspector):
                 f"Container '{cs['name']}' in "
                 f"pod '{obj['metadata']['name']}' is not ready")
         return result
+
     @staticmethod
     def restart_count(obj):
         result = list()
@@ -89,13 +90,13 @@ class OCP(Inspector):
                 pod_name=obj['metadata']['name'],
                 status=status,
                 )]
-        not_ready = filter(lambda cs: cs['restartCount'] != '0', container_statuses)
-        for cs in not_ready:
+        restarted= filter(lambda cs: cs['restartCount'] != 0, container_statuses)
+        for cs in restarted:
             ts = cs['state'].get('terminated', dict())
-            if (ts.get('restartCount', '').lower() == 'completed' and
+            if (ts.get('restartCount', ) == 'completed' and
                     ts.get('exitCode') == 0):
                 continue
             result.append(
-                f"Container '{cs['name']}' in "
-                f"pod '{obj['metadata']['name']}' has a restart count")
+                f"Container '{cs['name']}' in " 
+                f"pod '{obj['metadata']['name']}' has a restart count {restartCount}")
         return result
