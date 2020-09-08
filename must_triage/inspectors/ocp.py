@@ -22,6 +22,7 @@ class OCP(Inspector):
             except (yaml.scanner.ScannerError, yaml.parser.ParserError):
                 result[path].append("Failed to parse YAML content")
                 return result
+        result[path].extend(OCP.operator_success(obj))
         pods = list()
         if obj['kind'].lower() == 'pod':
             pods.append(obj)
@@ -31,6 +32,20 @@ class OCP(Inspector):
                 obj['items']
             ))
         result[path].extend(map(OCP.pod_ready, pods))
+        return result
+
+    @staticmethod
+    def operator_success(obj):
+        result = list()
+        if obj['kind'] != 'ClusterServiceVersion':
+            return result
+        status = obj['status']
+        if status['phase'].lower() == 'succeeded':
+            return result
+        result.append(
+            f"Operator phase is '{status['phase']}', "
+            "not 'Succeeded' as expected"
+        )
         return result
 
     @staticmethod
