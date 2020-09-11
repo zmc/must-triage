@@ -22,16 +22,19 @@ class OCP(Inspector):
             except (yaml.scanner.ScannerError, yaml.parser.ParserError):
                 result[path].append("Failed to parse YAML content")
                 return result
-        result[path].extend(OCP.operator_success(obj))
-        pods = list()
-        if obj['kind'].lower() == 'pod':
-            pods.append(obj)
-        elif obj['kind'].lower() == 'podlist':
-            pods.extend(filter(
-                lambda o: o['kind'].lower() == 'pod',
-                obj['items']
-            ))
-        result[path].extend(map(OCP.pod_ready, pods))
+        if 'kind' in obj:
+            result[path].extend(OCP.operator_success(obj))
+            pods = list()
+            if obj['kind'].lower() == 'pod':
+                pods.append(obj)
+            elif obj['kind'].lower() == 'podlist':
+                pods.extend(filter(
+                    lambda o: o['kind'].lower() == 'pod',
+                    obj['items']
+                ))
+            result[path].extend(map(OCP.pod_ready, pods))
+        if 'error' in obj:
+            result[path].append(obj)
         return result
 
     @staticmethod
