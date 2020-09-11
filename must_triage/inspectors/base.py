@@ -1,4 +1,7 @@
+import logging
+
 from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 
 import must_triage.fs as fs
 import must_triage.inspectors as inspectors
@@ -9,6 +12,7 @@ class Inspector:
     def __init__(self, root, progress=False):
         self.root = root
         self.progress = progress
+        self.log = logging.getLogger(self.__class__.__name__)
 
     def has_method(self, name):
         return callable(getattr(self, name, None))
@@ -38,12 +42,23 @@ class Inspector:
                 inspectors.merge_interests(self.interests, interests)
         return self.interests
 
+    def _inspector_wrapper(self, func, path):
+        try:
+            return func(path)
+        except Exception:
+            self.log.exception(
+                f"Unhandled exception while processing  {path}")
+            return dict()
+
     async def _inspect_helper(self, executor, paths, func, description):
         if not paths:
             return dict()
         interests = dict()
+
+        wrapped = partial(self._inspector_wrapper, func)
+
         results = list(ProgressBar(
-            executor.map(func, paths),
+            executor.map(wrapped, paths),
             total=len(paths),
             desc=description,
             disable=not self.progress,
