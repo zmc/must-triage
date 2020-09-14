@@ -54,7 +54,8 @@ class OCP(Inspector):
                 lambda o: o['kind'].lower() == 'pod',
                 obj['items']
             ))
-        result[path].extend(map(OCP.pod_ready, OCP.restart_count, pods))
+        result[path].extend(map(OCP.pod_ready, pods))
+        result[path].extend(map(OCP.restart_count, pods))
         return result
 
     @staticmethod
@@ -98,5 +99,5 @@ class OCP(Inspector):
                 continue
             result.append(
                 f"Container '{cs['name']}' in " 
-                f"pod '{obj['metadata']['name']}' has a restart count {restartCount}")
+                f"pod '{obj['metadata']['name']}' has a restart count")
         return result
