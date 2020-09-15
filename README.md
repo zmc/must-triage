@@ -9,11 +9,14 @@ Currently, `must-triage` knows about the following potential issues:
 ### OpenShift (OCP)
 - Unparseable YAML files
 - Pods not in ready state
+- Operators who haven't reported success
+- YAML files which contain a top-level error field
 
 ### OpenShift Container Storage (OCS)
 - Empty JSON files
 - Unparseable JSON files
 - Ceph health not `HEALTH_OK`
+- Logfiles which mention a panic
 
 Teaching it to identify new issues is not difficult; PRs warmly welcomed!
 
