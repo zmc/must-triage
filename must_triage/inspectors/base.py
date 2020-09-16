@@ -14,9 +14,6 @@ class Inspector:
         self.progress = progress
         self.log = logging.getLogger(self.__class__.__name__)
 
-    def has_method(self, name):
-        return callable(getattr(self, name, None))
-
     def gather(self):
         self.gathered = dict()
         for type_, obj in self.gather_types.items():
