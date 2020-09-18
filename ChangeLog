@@ -1,0 +1,34 @@
+CHANGES
+=======
+
+* Add GitHub action for CI
+* Update .project packaging/metadata
+* Look for golang panics in logfiles
+* Fix broken but accidentally-working fs.has\_ext()
+* Make OCS concurrent
+* Remove unused import
+
+v0.2.0
+------
+
+* Use tdqm for the progress bar
+* Speed up processing w/ async + process pools
+
+v0.1.1
+------
+
+* Fix long description MIME type
+
+v0.1.0
+------
+
+* Update README
+* Add -o flag (default json, yaml available)
+* Add progress bar
+* Handle datetime objects in JSON output
+* Deal with pods that have no containerStatuses
+* Handle pods that completed successfully
+* Add a check for empty files
+* Handle PodList objects
+* Add OCS inspector
+* Initial commit

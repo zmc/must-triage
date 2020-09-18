@@ -1,44 +1,20 @@
 import yaml
 
-from concurrent.futures import ProcessPoolExecutor
-from tqdm import tqdm
-
 import must_triage.fs as fs
-import must_triage.inspectors as inspectors
 
 from must_triage.inspectors.base import Inspector
-from must_triage.progress import ProgressBar
 
 
 class OCP(Inspector):
-    async def inspect(self):
-        self.interests = dict()
-        yamls = fs.find(self.root, lambda p: fs.has_ext(p, ['.yaml', '.yml']))
-        with ProcessPoolExecutor() as executor:
-            self.executor = executor
-            interests = await self.inspect_yamls(yamls)
-        inspectors.merge_interests(
-                self.interests,
-                interests,
-        )
-        return self.interests
-
-    async def inspect_yamls(self, paths):
-        if not paths:
-            return dict()
-        interests = dict()
-        results = list(ProgressBar(
-            self.executor.map(OCP._inspect_yaml, paths),
-            total=len(paths),
-            desc="Reading OCP files",
-            disable=not self.progress,
-        ))
-        for result in results:
-            interests.update(result)
-        return interests
+    gather_types = dict(
+        yaml=dict(
+            match=lambda p: fs.has_ext(p, ['yaml', 'yml']),
+            description="Reading OCP YAML files",
+        ),
+    )
 
     @staticmethod
-    def _inspect_yaml(path):
+    def inspect_yaml(path):
         result = {path: list()}
         with open(path) as fd:
             try:
@@ -46,16 +22,34 @@ class OCP(Inspector):
             except (yaml.scanner.ScannerError, yaml.parser.ParserError):
                 result[path].append("Failed to parse YAML content")
                 return result
-        pods = list()
-        if obj['kind'].lower() == 'pod':
-            pods.append(obj)
-        elif obj['kind'].lower() == 'podlist':
-            pods.extend(filter(
-                lambda o: o['kind'].lower() == 'pod',
-                obj['items']
-            ))
-        result[path].extend(map(OCP.pod_ready, pods))
-        result[path].extend(map(OCP.restart_count, pods))
+        if 'kind' in obj:
+            result[path].extend(OCP.operator_success(obj))
+            pods = list()
+            if obj['kind'].lower() == 'pod':
+                pods.append(obj)
+            elif obj['kind'].lower() == 'podlist':
+                pods.extend(filter(
+                    lambda o: o['kind'].lower() == 'pod',
+                    obj['items']
+                ))
+            result[path].extend(map(OCP.pod_ready, pods))
+            result[path].extend(map(OCP.restart_count, pods))
+        if 'error' in obj:
+            result[path].append(obj)
+        return result
+
+    @staticmethod
+    def operator_success(obj):
+        result = list()
+        if obj['kind'] != 'ClusterServiceVersion':
+            return result
+        status = obj['status']
+        if status['phase'].lower() == 'succeeded':
+            return result
+        result.append(
+            f"Operator phase is '{status['phase']}', "
+            "not 'Succeeded' as expected"
+        )
         return result
 
     @staticmethod
@@ -99,5 +93,5 @@ class OCP(Inspector):
                 continue
             result.append(
                 f"Container '{cs['name']}' in " 
-                f"pod '{obj['metadata']['name']}' has a restart count")
+                f"pod '{obj['metadata']['name']}' has restart count: {cs['restartCount']}")
         return result

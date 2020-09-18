@@ -1,4 +1,7 @@
-.eggs
 *.egg-info
+.eggs
+.tox
 __pycache__
+build
+dist
 venv

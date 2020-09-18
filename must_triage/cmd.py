@@ -29,6 +29,7 @@ def main():
     interests = dict()
     for inspector_cls in inspectors.all():
         inspector = inspector_cls(root=args.path, progress=not args.quiet)
+        inspector.gather()
         inspectors.merge_interests(interests, asyncio.run(inspector.inspect()))
 
     if args.out == 'json':

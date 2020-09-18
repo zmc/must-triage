@@ -3,51 +3,57 @@ import os
 import re
 
 import must_triage.fs as fs
-import must_triage.inspectors as inspectors
 
 from must_triage.inspectors.base import Inspector
-from must_triage.progress import ProgressBar
 
 
 class OCS(Inspector):
-    async def inspect(self):
-        self.interests = dict()
-        jsons = fs.find(
-            self.root,
-            lambda p: re.match('.*--format_json(-pretty)?$', p)
-        )
-        inspectors.merge_interests(
-            self.interests,
-            await self.inspect_jsons(jsons),
-        )
-        return self.interests
+    gather_types = dict(
+        json=dict(
+            match=lambda p: re.match('.*--format_json(-pretty)?$', p),
+            description="Reading OCS JSON files",
+        ),
+        log=dict(
+            match=lambda p: fs.has_ext(p, ['log']),
+            description="Reading OCS log files",
+        ),
+    )
 
-    async def inspect_jsons(self, paths):
-        if not paths:
-            return dict()
-        interests = dict()
-        for path in ProgressBar(
-                paths, desc="Reading OCS files", disable=not self.progress):
-            interests[path] = await self._inspect_json(path)
-        return interests
-
-    async def _inspect_json(self, path):
-        result = list()
+    @staticmethod
+    def inspect_json(path):
+        result = {path: list()}
         if os.stat(path).st_size == 0:
-            result.append("File is empty")
+            result[path].append("File is empty")
             return result
         with open(path) as fd:
             try:
                 obj = json.load(fd)
             except json.decoder.JSONDecodeError:
-                result.append("Failed to parse JSON content")
+                result[path].append("Failed to parse JSON content")
                 return result
         if 'health_detail' in path:
-            result.extend(self.unhealthy(obj))
+            result[path].extend(OCS.unhealthy(obj))
         return result
 
-    def unhealthy(self, obj):
+    @staticmethod
+    def unhealthy(obj):
         result = list()
         if obj['status'] != 'HEALTH_OK':
             result.append(obj)
         return result
+
+    @staticmethod
+    def inspect_log(path):
+        result = {path: list()}
+        with open(path) as log:
+            for line in log.readlines():
+                line = line.strip()
+                if OCS.panicked(line):
+                    result[path].append(line)
+        return result
+
+    @staticmethod
+    def panicked(line):
+        if re.match('.*Observed a panic:.*', line):
+            return True
+        return False

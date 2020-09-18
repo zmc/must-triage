@@ -2,7 +2,9 @@ import os
 
 
 def has_ext(path, ext):
-    return path.split('.')[-1] in ['yaml', 'yml']
+    if not isinstance(ext, list):
+        ext = [ext]
+    return path.split('.')[-1] in ext
 
 
 def find(path, callback):

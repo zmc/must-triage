@@ -9,7 +9,6 @@ class ProgressBar(tqdm):
             mininterval=0.1,
             maxinterval=1,
             smoothing=0,
-            #bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]',
             bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}]',
         ))
         super(ProgressBar, self).__init__(*args, **kwargs)
