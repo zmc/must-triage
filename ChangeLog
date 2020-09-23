@@ -1,6 +1,23 @@
 CHANGES
 =======
 
+v0.3.0
+------
+
+* .github: Publish package on release creation
+* .github: Upload coverage reports to codecov
+* .github: Run CI on push to master
+* Unit tests
+* inspectors/base: Remove unused method
+* README: Mention new checks
+* OCP: Capture generic errors in YAML files
+* Wrap inspectors to aid in debugging
+* progress: Drop commented line to satisfy linter
+* tox: Fix flake8 invocation
+* OCP: Add check for operator success
+* Refactor inspectors
+* .github: Add workflow\_dispatch to CI workflow
+* Change CI action to trigger on PRs
 * Add GitHub action for CI
 * Update .project packaging/metadata
 * Look for golang panics in logfiles
