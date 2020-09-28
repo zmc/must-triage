@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
@@ -24,3 +27,11 @@ jobs:
         run: pip install tox
       - name: Run flake8
         run: tox -e flake8
+      - name: Run unit tests
+        run: tox -e py3
+      - name: Upload coverage report to codecov
+        run: |
+          pip install codecov
+          codecov
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

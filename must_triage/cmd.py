@@ -2,19 +2,20 @@ import argparse
 import asyncio
 import json
 import os
+import sys
 import yaml
 
 from must_triage import formatters
 from must_triage import inspectors
 
 
-def parse_args():
+def parse_args(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('path', type=dir_or_file)
     parser.add_argument('-q', '--quiet', action='store_true')
     parser.add_argument(
             '-o', '--out', choices=['json', 'yaml'], default='json')
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def dir_or_file(path):
@@ -25,7 +26,7 @@ def dir_or_file(path):
 
 
 def main():
-    args = parse_args()
+    args = parse_args(sys.argv[1:])
     interests = dict()
     for inspector_cls in inspectors.all():
         inspector = inspector_cls(root=args.path, progress=not args.quiet)
