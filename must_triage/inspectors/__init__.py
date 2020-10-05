@@ -1,4 +1,5 @@
-from . import ocp, ocs
+import must_triage.inspectors.ocp as ocp
+import must_triage.inspectors.ocs as ocs
 
 
 def merge_interests(existing, new):

@@ -1,11 +1,10 @@
 import yaml
 
 import must_triage.fs as fs
+import must_triage.inspectors.base as base
 
-from must_triage.inspectors.base import Inspector
 
-
-class OCP(Inspector):
+class OCP(base.Inspector):
     gather_types = dict(
         yaml=dict(
             match=lambda p: fs.has_ext(p, ['yaml', 'yml']),

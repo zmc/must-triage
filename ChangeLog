@@ -1,9 +1,15 @@
 CHANGES
 =======
 
+v0.3.1
+------
+
+* Fix circular import
+
 v0.3.0
 ------
 
+* Update ChangeLog for v0.3.0
 * .github: Publish package on release creation
 * .github: Upload coverage reports to codecov
 * .github: Run CI on push to master

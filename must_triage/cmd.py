@@ -5,8 +5,8 @@ import os
 import sys
 import yaml
 
-from must_triage import formatters
-from must_triage import inspectors
+import must_triage.formatters as formatters
+import must_triage.inspectors as inspectors
 
 
 def parse_args(args):

@@ -3,11 +3,10 @@ import os
 import re
 
 import must_triage.fs as fs
+import must_triage.inspectors.base as base
 
-from must_triage.inspectors.base import Inspector
 
-
-class OCS(Inspector):
+class OCS(base.Inspector):
     gather_types = dict(
         json=dict(
             match=lambda p: re.match('.*--format_json(-pretty)?$', p),
